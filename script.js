@@ -46,22 +46,182 @@ document.querySelectorAll('.nav-links a').forEach(link => {
     });
 });
 
-// Form submission
-const contactForm = document.querySelector('.contact-form');
-if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+// ===== NETLIFY FORM HANDLING =====
+document.addEventListener('DOMContentLoaded', function() {
+    const contactForm = document.querySelector('form[name="contact"]');
+    
+    if (!contactForm) return;
+    
+    // Form elements
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    const formStatus = document.getElementById('formStatus');
+    const originalBtnText = submitBtn.innerHTML;
+    
+    // Clear errors on input
+    contactForm.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', () => {
+            clearError(field.name);
+        });
+    });
+    
+    // Form submission
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Get form data
-        const formData = new FormData(contactForm);
-        const data = Object.fromEntries(formData);
+        // Validate form
+        if (!validateForm()) return;
         
-        // Here you would typically send the data to a server
-        // For now, just show an alert
-        alert('Thank you for your message! I\'ll get back to you soon.');
-        contactForm.reset();
+        // Prepare form data
+        const formData = new FormData(contactForm);
+        
+        // Show loading state
+        showLoading();
+        
+        try {
+            // Send to Netlify
+            const response = await fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(formData).toString()
+            });
+            
+            if (response.ok) {
+                // Success
+                showSuccess();
+                contactForm.reset();
+                
+                // Log to console for debugging
+                console.log('Form submitted successfully');
+                
+                // Send to Google Sheets (optional - see step 5)
+                // await sendToGoogleSheets(formData);
+                
+            } else {
+                throw new Error('Network response was not ok');
+            }
+            
+        } catch (error) {
+            console.error('Form submission error:', error);
+            showError('Something went wrong. Please try again or email me directly.');
+        }
     });
-}
+    
+    // Form validation
+    function validateForm() {
+        let isValid = true;
+        
+        // Clear previous errors
+        clearAllErrors();
+        
+        // Check each required field
+        const requiredFields = contactForm.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                showError(field.name, 'This field is required');
+                isValid = false;
+            }
+            
+            // Email validation
+            if (field.type === 'email' && field.value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(field.value)) {
+                    showError(field.name, 'Please enter a valid email address');
+                    isValid = false;
+                }
+            }
+        });
+        
+        return isValid;
+    }
+    
+    // Error handling functions
+    function showError(fieldName, message) {
+        const errorElement = contactForm.querySelector(`[data-error="${fieldName}"]`);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        
+        // Also highlight the field
+        const field = contactForm.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            field.classList.add('error');
+        }
+    }
+    
+    function clearError(fieldName) {
+        const errorElement = contactForm.querySelector(`[data-error="${fieldName}"]`);
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+        }
+        
+        const field = contactForm.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            field.classList.remove('error');
+        }
+    }
+    
+    function clearAllErrors() {
+        contactForm.querySelectorAll('.form-error').forEach(el => {
+            el.textContent = '';
+            el.style.display = 'none';
+        });
+        
+        contactForm.querySelectorAll('input, textarea').forEach(field => {
+            field.classList.remove('error');
+        });
+    }
+    
+    // Status message functions
+    function showLoading() {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitBtn.disabled = true;
+        clearStatus();
+    }
+    
+    function showSuccess() {
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Message Sent!';
+        submitBtn.classList.add('success');
+        
+        showStatus('✅ Thank you! Your message has been sent successfully.', 'success');
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('success');
+        }, 3000);
+    }
+    
+    function showError(message) {
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+        
+        showStatus(`❌ ${message}`, 'error');
+    }
+    
+    function showStatus(message, type) {
+        if (!formStatus) return;
+        
+        formStatus.textContent = message;
+        formStatus.className = `form-status ${type}`;
+        formStatus.style.display = 'block';
+        
+        // Auto-hide error messages after 5 seconds
+        if (type === 'error') {
+            setTimeout(() => {
+                formStatus.style.display = 'none';
+            }, 5000);
+        }
+    }
+    
+    function clearStatus() {
+        if (formStatus) {
+            formStatus.style.display = 'none';
+        }
+    }
+});
 
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -203,3 +363,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Check if we're on localhost or Netlify
+const isNetlify = window.location.hostname.includes('netlify.app') || 
+                  window.location.hostname.includes('localhost');
+
+// Use different form handling based on environment
+if (isNetlify) {
+    // Use Netlify form handling code
+    // ... (Netlify code from above)
+} else {
+    // Use local testing code (shows alert)
+    const contactForm = document.querySelector('form[name="contact"]');
+    if (contactForm) {
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Form would submit to Netlify in production. Local test successful!');
+            contactForm.reset();
+        });
+    }
+}

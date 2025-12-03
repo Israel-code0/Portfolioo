@@ -1540,3 +1540,134 @@ section {
     margin-top: 20px;
     flex-wrap: wrap;
 }
+
+/* ===== FORM VALIDATION STYLES ===== */
+.form-error {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: none;
+    animation: slideDown 0.3s ease;
+}
+
+.form-group input.error,
+.form-group textarea.error {
+    border-color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.05);
+}
+
+.form-group input.error:focus,
+.form-group textarea.error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Form Status Messages */
+.form-status {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    display: none;
+    animation: fadeIn 0.5s ease;
+    text-align: center;
+}
+
+.form-status.success {
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid #10b981;
+    color: #10b981;
+}
+
+.form-status.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+}
+
+.form-status.info {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+}
+
+/* Hide honeypot field */
+.hidden {
+    display: none;
+}
+
+/* Button Success State */
+.btn.success {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.btn.success::before {
+    background: #0da271;
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Spinner Animation */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Form Field Focus States */
+.form-group input:not(.error):focus,
+.form-group textarea:not(.error):focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+/* Placeholder Styling */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+/* Dark Mode Form Styles */
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group textarea {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-group input.error,
+[data-theme="dark"] .form-group textarea.error {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: #f87171;
+}
+
+[data-theme="dark"] .form-status.success {
+    background: rgba(52, 211, 153, 0.15);
+    border-color: #34d399;
+}
+
+[data-theme="dark"] .form-status.error {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #f87171;
+}
