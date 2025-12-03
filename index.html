@@ -401,7 +401,9 @@
                     </div>
                 </div>
                 
-                 <form class="contact-form" name="contact" method="post" data-netlify="true" netlify-honeypot="bot-field" netlify>
+                 <form class="contact-form" name="contact" method="post" data-netlify="true" netlify-honeypot="bot-field" action="/success.html">
+                    <input type="hidden" name="form-name" value="contact" />
+                    <input type="text" name="bot-field" style="display:none;" />
                 <div class="form-group">
                     <input type="text" placeholder="Alex John" required>
                 </div>
