@@ -46,64 +46,63 @@ document.querySelectorAll('.nav-links a').forEach(link => {
     });
 });
 
-// ===== NETLIFY FORM HANDLING =====
+// ===== FORM VALIDATION & SUBMISSION =====
 document.addEventListener('DOMContentLoaded', function() {
     const contactForm = document.querySelector('form[name="contact"]');
     
     if (!contactForm) return;
     
-    // Form elements
     const submitBtn = contactForm.querySelector('button[type="submit"]');
-    const formStatus = document.getElementById('formStatus');
     const originalBtnText = submitBtn.innerHTML;
     
     // Clear errors on input
     contactForm.querySelectorAll('input, textarea').forEach(field => {
-        field.addEventListener('input', () => {
-            clearError(field.name);
+        field.addEventListener('input', function() {
+            this.classList.remove('error');
+            const errorDiv = this.parentElement.querySelector('.form-error');
+            if (errorDiv) errorDiv.style.display = 'none';
         });
     });
     
     // Form submission
-    contactForm.addEventListener('submit', async (e) => {
+    contactForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
         // Validate form
         if (!validateForm()) return;
         
-        // Prepare form data
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitBtn.disabled = true;
+        
+        // Submit to Netlify (Zapier will pick this up)
         const formData = new FormData(contactForm);
         
-        // Show loading state
-        showLoading();
-        
-        try {
-            // Send to Netlify
-            const response = await fetch('/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(formData).toString()
-            });
-            
+        fetch('/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(formData).toString()
+        })
+        .then(response => {
             if (response.ok) {
-                // Success
-                showSuccess();
+                // Success - Zapier will send auto-reply
+                showSuccessMessage();
                 contactForm.reset();
-                
-                // Log to console for debugging
-                console.log('Form submitted successfully');
-                
-                // Send to Google Sheets (optional - see step 5)
-                // await sendToGoogleSheets(formData);
-                
             } else {
                 throw new Error('Network response was not ok');
             }
-            
-        } catch (error) {
-            console.error('Form submission error:', error);
-            showError('Something went wrong. Please try again or email me directly.');
-        }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorMessage('Something went wrong. Please try again or email me directly.');
+        })
+        .finally(() => {
+            // Reset button after 3 seconds
+            setTimeout(() => {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }, 3000);
+        });
     });
     
     // Form validation
@@ -111,58 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let isValid = true;
         
         // Clear previous errors
-        clearAllErrors();
-        
-        // Check each required field
-        const requiredFields = contactForm.querySelectorAll('[required]');
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                showError(field.name, 'This field is required');
-                isValid = false;
-            }
-            
-            // Email validation
-            if (field.type === 'email' && field.value) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(field.value)) {
-                    showError(field.name, 'Please enter a valid email address');
-                    isValid = false;
-                }
-            }
-        });
-        
-        return isValid;
-    }
-    
-    // Error handling functions
-    function showError(fieldName, message) {
-        const errorElement = contactForm.querySelector(`[data-error="${fieldName}"]`);
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-        
-        // Also highlight the field
-        const field = contactForm.querySelector(`[name="${fieldName}"]`);
-        if (field) {
-            field.classList.add('error');
-        }
-    }
-    
-    function clearError(fieldName) {
-        const errorElement = contactForm.querySelector(`[data-error="${fieldName}"]`);
-        if (errorElement) {
-            errorElement.textContent = '';
-            errorElement.style.display = 'none';
-        }
-        
-        const field = contactForm.querySelector(`[name="${fieldName}"]`);
-        if (field) {
-            field.classList.remove('error');
-        }
-    }
-    
-    function clearAllErrors() {
         contactForm.querySelectorAll('.form-error').forEach(el => {
             el.textContent = '';
             el.style.display = 'none';
@@ -171,55 +118,84 @@ document.addEventListener('DOMContentLoaded', function() {
         contactForm.querySelectorAll('input, textarea').forEach(field => {
             field.classList.remove('error');
         });
+        
+        // Check required fields
+        const requiredFields = contactForm.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                showFieldError(field, 'This field is required');
+                isValid = false;
+            }
+            
+            // Email validation
+            if (field.type === 'email' && field.value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(field.value)) {
+                    showFieldError(field, 'Please enter a valid email address');
+                    isValid = false;
+                }
+            }
+        });
+        
+        return isValid;
     }
     
-    // Status message functions
-    function showLoading() {
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        submitBtn.disabled = true;
-        clearStatus();
+    function showFieldError(field, message) {
+        field.classList.add('error');
+        
+        // Create or find error element
+        let errorElement = field.parentElement.querySelector('.form-error');
+        if (!errorElement) {
+            errorElement = document.createElement('div');
+            errorElement.className = 'form-error';
+            field.parentElement.appendChild(errorElement);
+        }
+        
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
     }
     
-    function showSuccess() {
+    function showSuccessMessage() {
         submitBtn.innerHTML = '<i class="fas fa-check"></i> Message Sent!';
         submitBtn.classList.add('success');
         
-        showStatus('✅ Thank you! Your message has been sent successfully.', 'success');
+        // Show success message
+        const successDiv = document.createElement('div');
+        successDiv.className = 'form-success';
+        successDiv.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <div>
+                <h4>Thank you! ✨</h4>
+                <p>Your message has been sent successfully. You should receive an auto-reply email within a few minutes.</p>
+            </div>
+        `;
         
-        // Reset button after 3 seconds
+        // Insert after form
+        contactForm.parentNode.insertBefore(successDiv, contactForm.nextSibling);
+        
+        // Remove after 10 seconds
         setTimeout(() => {
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('success');
-        }, 3000);
+            successDiv.style.opacity = '0';
+            setTimeout(() => successDiv.remove(), 500);
+        }, 10000);
     }
     
-    function showError(message) {
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.disabled = false;
+    function showErrorMessage(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'form-error-message';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message}</span>
+        `;
         
-        showStatus(`❌ ${message}`, 'error');
-    }
-    
-    function showStatus(message, type) {
-        if (!formStatus) return;
+        // Insert after form
+        contactForm.parentNode.insertBefore(errorDiv, contactForm.nextSibling);
         
-        formStatus.textContent = message;
-        formStatus.className = `form-status ${type}`;
-        formStatus.style.display = 'block';
-        
-        // Auto-hide error messages after 5 seconds
-        if (type === 'error') {
-            setTimeout(() => {
-                formStatus.style.display = 'none';
-            }, 5000);
-        }
-    }
-    
-    function clearStatus() {
-        if (formStatus) {
-            formStatus.style.display = 'none';
-        }
+        // Remove after 5 seconds
+        setTimeout(() => {
+            errorDiv.style.opacity = '0';
+            setTimeout(() => errorDiv.remove(), 500);
+        }, 5000);
     }
 });
 

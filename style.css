@@ -1672,3 +1672,106 @@ section {
     border-color: #f87171;
 }
 
+/* ===== FORM SUCCESS/ERROR MESSAGES ===== */
+.form-success {
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid #10b981;
+    color: #10b981;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    animation: slideDown 0.5s ease;
+    transition: opacity 0.5s ease;
+}
+
+.form-success i {
+    font-size: 1.5rem;
+    margin-top: 2px;
+}
+
+.form-success h4 {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+}
+
+.form-success p {
+    margin: 0;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.form-error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.5s ease;
+    transition: opacity 0.5s ease;
+}
+
+.form-error-message i {
+    font-size: 1.2rem;
+}
+
+/* Field errors */
+.form-group .form-error {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    display: none;
+    animation: slideDown 0.3s ease;
+}
+
+.form-group input.error,
+.form-group textarea.error {
+    border-color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.05);
+}
+
+/* Button success state */
+.btn.success {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.btn.success:hover {
+    background: #0da271;
+    border-color: #0da271;
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .form-success {
+    background: rgba(52, 211, 153, 0.15);
+    border-color: #34d399;
+}
+
+[data-theme="dark"] .form-error-message {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #f87171;
+}
+
+[data-theme="dark"] .form-group input.error,
+[data-theme="dark"] .form-group textarea.error {
+    background: rgba(239, 68, 68, 0.1);
+}
+
